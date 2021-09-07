@@ -19,6 +19,6 @@ model Dictionary {
 
 model Chats {
   id String @id @default(dbgenerated()) @map("_id") @db.ObjectId
-  chatId String
-  timeInterval Int
+  chatId String @unique
+  // timeInterval Int
 }
