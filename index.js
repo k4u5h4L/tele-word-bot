@@ -21,42 +21,97 @@ let chats = [];
 
 const bot = new TelegramBot(token, { polling: true });
 
-bot.onText(/\/subscribe (.+)/, (msg, match) => {
-    // 'msg' is the received Message from Telegram
-    // 'match' is the result of executing the regexp above on the text content
-    // of the message
+// bot.onText(/\/subscribe (.+)/, (msg, match) => {
+//     // 'msg' is the received Message from Telegram
+//     // 'match' is the result of executing the regexp above on the text content
+//     // of the message
 
+//     const chatId = msg.chat.id;
+//     // const resp = match[1]; // the captured "whatever"
+
+//     // send back the matched "whatever" to the chat
+
+// });
+
+bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
-    // const resp = match[1]; // the captured "whatever"
 
-    // send back the matched "whatever" to the chat
-    bot.sendMessage(
-        chatId,
-        "Your subscription has been added.\nYou will now receive 2 random words a day."
-    );
+    const subRegex = /\/subscribe/gim;
+    const unsubRegex = /\/unsubscribe/gim;
+    const searchRegex = /\/search/gim;
 
-    chats.push(`${chatId}`);
+    if (subRegex.test(msg.text)) {
+        if (chats.includes(`${chatId}`)) {
+            bot.sendMessage(chatId, "You already seem to be subscribed.");
+        } else {
+            bot.sendMessage(
+                chatId,
+                "Your subscription has been added.\nYou will now receive 2 random words a day."
+            );
 
-    prisma.chats
-        .create({
-            data: {
-                chatId: `${chatId}`,
+            chats.push(`${chatId}`);
+
+            prisma.chats
+                .create({
+                    data: {
+                        chatId: `${chatId}`,
+                    },
+                })
+                .then((result) => {
+                    console.log(`New chat added!`);
+                    console.log(result);
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+        }
+    } else if (searchRegex.test(msg.text)) {
+        const temp = msg.text.split(" ");
+        const query = temp[1].toLowerCase();
+
+        const res = await prisma.dictionary.findMany({
+            where: {
+                word: {
+                    contains: query,
+                },
             },
-        })
-        .then((result) => {
-            console.log(`New chat added!`);
-            console.log(result);
-        })
-        .catch((err) => {
-            console.error(err);
+            take: 5,
         });
-});
 
-bot.on("message", (msg) => {
-    const chatId = msg.chat.id;
+        let toSend = "";
 
-    // send a message to the chat acknowledging receipt of their message
-    bot.sendMessage(chatId, "Received your message");
+        res.forEach((obj) => {
+            toSend += `word: ${obj.word}\n\nmeaning: ${obj.meaning}\n\n-------------------------\n\n`;
+        });
+
+        console.log(`Sent search to ${chatId} about ${query}`);
+
+        bot.sendMessage(chatId, toSend);
+    } else if (unsubRegex.test(msg.text)) {
+        if (!chats.includes(`${chatId}`)) {
+            bot.sendMessage(chatId, "You aren't subscribed.");
+        } else {
+            const removeChatIndex = chats.indexOf(`${chatId}`);
+
+            delete chats[removeChatIndex];
+
+            prisma.chats
+                .delete({
+                    where: {
+                        chatId: `${chatId}`,
+                    },
+                })
+                .then((result) => {
+                    console.log(`Chat deleted!`);
+                    console.log(result);
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+
+            bot.sendMessage(chatId, "Successfully unsubscribed");
+        }
+    }
 });
 
 const start = async () => {

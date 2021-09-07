@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const fs = require("fs");
 
-const dict = require("./data/dictionary.json");
+const dict = require("../data/dictionary.json");
 
 const prisma = new PrismaClient();
 
