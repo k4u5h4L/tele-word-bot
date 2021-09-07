@@ -2,10 +2,23 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["mongoDb"]
+}
+
+model Dictionary {
+  id String @id @default(dbgenerated()) @map("_id") @db.ObjectId
+  word String
+  meaning String
+}
+
+model Chats {
+  id String @id @default(dbgenerated()) @map("_id") @db.ObjectId
+  chatId String
+  timeInterval Int
 }
