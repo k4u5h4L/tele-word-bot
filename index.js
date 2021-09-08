@@ -9,9 +9,14 @@ process.env["NTBA_FIX_319"] = 1; // to avoid a deprecation warning
 
 const TelegramBot = require("node-telegram-bot-api");
 const { PrismaClient } = require("@prisma/client");
+const express = require("express");
 
 const getRandomInt = require("./helpers/getRandom");
 const wordConstructor = require("./helpers/wordConstructor");
+
+const app = express();
+
+const PORT = 3000;
 
 const prisma = new PrismaClient();
 
@@ -148,3 +153,14 @@ start();
 setTimeout(() => {
     ping();
 }, 1000);
+
+app.get("*", (req, res) => {
+    res.send({
+        message: "Tele Word Bot deployed",
+        link: "t.me/tele_word_bot",
+    });
+});
+
+app.listen(process.env.PORT || PORT, () =>
+    console.log(`Express server running on port ${process.env.PORT || PORT}`)
+);
