@@ -143,7 +143,7 @@ const ping = async () => {
         chats.forEach((chatId) => {
             sendWord(chatId);
         });
-    }, 8000);
+    }, 43200000);
 };
 
 console.log("Bot ready");
